@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèles & Métriques - Sales Forecasting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        nav {
+            background: #34495e;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        nav li {
+            margin: 0;
+        }
+        
+        nav a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 18px 25px;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+        
+        nav a:hover {
+            background: #2c3e50;
+        }
+        
+        .content {
+            padding: 50px 60px;
+        }
+        
+        section {
+            margin-bottom: 60px;
+        }
+        
+        h2 {
+            color: #1e3c72;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        h3 {
+            color: #2a5298;
+            font-size: 1.5em;
+            margin: 30px 0 15px 0;
+        }
+        
+        h4 {
+            color: #34495e;
+            font-size: 1.2em;
+            margin: 20px 0 10px 0;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        
+        .model-box {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        
+        .formula {
+            background: #ecf0f1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            text-align: center;
+            border: 2px solid #bdc3c7;
+        }
+        
+        .highlight {
+            background: #e3f2fd;
+            padding: 20px;
+            border-left: 4px solid #2196f3;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: #2a5298;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .advantage {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .limitation {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .references {
+            background: #f8f9fa;
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 5px;
+        }
+        
+        .references ol {
+            margin-left: 20px;
+        }
+        
+        .references li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .key-point {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Modèles & Métriques d'Évaluation</h1>
+            <p>Note Technique – Prévision des Ventes Retail<br>Inspiré du Kaggle Corporación Favorita Grocery Sales Forecasting</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="#intro">Introduction</a></li>
+                <li><a href="#base-finale">Base Finale</a></li>
+                <li><a href="#modeles">Modèles</a></li>
+                <li><a href="#metriques">Métriques</a></li>
+                <li><a href="#bonnes-pratiques">Bonnes Pratiques</a></li>
+                <li><a href="#references">Références</a></li>
+            </ul>
+        </nav>
+        
+        <div class="content">
+            <section id="intro">
+                <h2>1. Introduction Générale</h2>
+                
+                <p>La prévision des ventes constitue un enjeu stratégique majeur dans le secteur du retail. Elle permet d'optimiser la gestion des stocks, de minimiser les ruptures et les surstocks, et d'améliorer la planification opérationnelle. Dans un contexte de grande distribution, où des milliers de produits sont vendus quotidiennement dans de multiples points de vente, la capacité à anticiper précisément la demande devient un avantage compétitif déterminant.</p>
+                
+                <p>Le problème de prévision des ventes s'inscrit dans le domaine des séries temporelles et nécessite de traiter des données transactionnelles caractérisées par une forte saisonnalité, des tendances temporelles, et des comportements non-linéaires complexes. Les données retail présentent également des défis spécifiques : distributions asymétriques, présence de nombreux zéros (produits non vendus certains jours), et hétérogénéité importante entre les produits et les magasins.</p>
+                
+                <div class="highlight">
+                    <h4>Importance de la comparaison de modèles</h4>
+                    <p>La comparaison rigoureuse de plusieurs familles de modèles constitue une étape centrale en data science. Elle permet de :</p>
+                    <p><strong>• Établir un baseline de référence</strong> pour quantifier l'apport réel du machine learning</p>
+                    <p><strong>• Identifier les compromis</strong> entre performance prédictive, complexité et temps de calcul</p>
+                    <p><strong>• Sélectionner le modèle le plus adapté</strong> au contexte métier et aux contraintes de production</p>
+                    <p><strong>• Justifier scientifiquement</strong> les choix techniques auprès des parties prenantes</p>
+                </div>
+                
+                <p>Les compétitions Kaggle, et notamment la compétition Corporación Favorita Grocery Sales Forecasting, offrent un cadre standardisé permettant de comparer objectivement différentes approches méthodologiques. Ces compétitions reflètent des problématiques industrielles réelles et ont contribué à établir les meilleures pratiques en matière de forecasting retail. Les solutions gagnantes combinent généralement feature engineering sophistiqué, ensembles de modèles, et métriques d'évaluation adaptées aux spécificités du domaine.</p>
+            </section>
+            <section id="base-finale">
+    <h2>2. Présentation de la Base de Données Finale</h2>
+
+    <p>
+        La performance d’un modèle de prévision des ventes dépend autant du choix de l’algorithme
+        que de la qualité de la base de données utilisée. Une attention particulière a donc été portée
+        au <strong>feature engineering</strong>, à la transformation de la variable cible et à l’intégration
+        de variables exogènes pertinentes (calendrier, économie, événements).
+    </p>
+
+    <div class="highlight">
+        <h4>Objectif de la construction de la base</h4>
+        <p>
+            Construire une base <strong>riche, stable et économiquement interprétable</strong>, capable
+            de capturer à la fois :
+        </p>
+        <p>
+            • les dynamiques temporelles des ventes<br>
+            • les effets retardés (lags)<br>
+            • les chocs exogènes (pétrole, jours fériés, promotions)<br>
+            • l’hétérogénéité produits / magasins
+        </p>
+    </div>
+
+    <!-- ================= TARGET ================= -->
+    <h3>2.1 🎯 Variable Cible (Target)</h3>
+
+    <div class="model-box">
+        <h4><strong>unit_sales_win</strong> — Nombre d’unités vendues</h4>
+
+        <p>
+            La variable cible représente le nombre d’unités vendues par
+            <strong>produit–magasin–jour</strong>.
+            Étant fortement asymétrique et sujette à des valeurs extrêmes,
+            elle a subi deux transformations successives.
+        </p>
+
+        <h4>1️⃣ Winsorisation</h4>
+        <p>
+            Les valeurs extrêmes ont été plafonnées entre le
+            <strong>5<sup>e</sup> et le 99.5<sup>e</sup> percentile</strong>.
+            Cette opération permet de :
+        </p>
+        <p>
+            • réduire l’influence disproportionnée des outliers<br>
+            • stabiliser l’apprentissage des modèles<br>
+            • préserver l’information globale sans supprimer d’observations
+        </p>
+
+        <h4>2️⃣ Transformation Logarithmique</h4>
+        <div class="formula">
+            y = log(1 + unit_sales_win)
+        </div>
+
+        <p>
+            La transformation <strong>log1p</strong> réduit l’asymétrie de la distribution,
+            stabilise la variance et rend la cible plus compatible avec les hypothèses
+            des modèles (en particulier linéaires et boosting).
+        </p>
+    </div>
+
+    <!-- ================= FEATURES ================= -->
+    <h3>2.2 📊 Variables Explicatives (Features)</h3>
+
+    <!-- TEMPORAL -->
+    <div class="model-box">
+        <h4>🕒 Variables Temporelles</h4>
+        <p>
+            Issues directement de la date, ces variables permettent de capturer
+            la saisonnalité et les effets calendaires.
+        </p>
+
+        <p>
+            • <strong>day</strong> : jour du mois (1–31)<br>
+            • <strong>month</strong> : mois de l’année (1–12)<br>
+            • <strong>year</strong> : année<br>
+            • <strong>day_of_week</strong> : jour de la semaine (1 = lundi, 7 = dimanche)<br>
+            • <strong>is_weekend</strong> : indicateur week-end<br>
+            • <strong>is_payday</strong> : jour de paie (15 ou fin de mois, effet consommation)<br>
+            • <strong>is_year_end</strong> : période de fin d’année (après le 20 décembre)
+        </p>
+    </div>
+
+    <!-- OIL -->
+    <div class="model-box">
+        <h4>🛢️ Variables Économiques – Prix du Pétrole</h4>
+        <p>
+            L’économie équatorienne étant fortement dépendante du pétrole,
+            son intégration permet de capturer des effets macroéconomiques indirects
+            sur la consommation.
+        </p>
+
+        <p>
+            • <strong>dcoilwtico</strong> : prix journalier du pétrole brut (WTI)<br>
+            • <strong>oil_smooth_7d</strong> : moyenne mobile 7 jours (lissage)<br>
+            • <strong>oil_lag_10</strong> : prix du pétrole avec un retard de 10 jours
+        </p>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="model-box">
+        <h4>🎉 Vacances et Événements</h4>
+        <p>
+            Les jours fériés et événements ont un impact direct sur les comportements d’achat.
+            Leur effet dépend de leur portée géographique.
+        </p>
+
+        <p>
+            • <strong>n_events_total</strong> : nombre total d’événements<br>
+            • <strong>is_holiday_event</strong> : indicateur binaire d’événement<br>
+            • <strong>is_national_holiday</strong> : jour férié national<br>
+            • <strong>n_nat / n_reg / n_loc</strong> : événements nationaux, régionaux, locaux<br>
+            • <strong>n_states_affected</strong> / <strong>n_cities_affected</strong>
+        </p>
+    </div>
+
+    <!-- LAGS -->
+    <div class="model-box">
+        <h4>📈 Historique des Ventes (Lags & Fenêtres)</h4>
+        <p>
+            Ces variables capturent la dépendance temporelle des ventes,
+            essentielle en prévision de séries temporelles.
+        </p>
+
+        <p>
+            • <strong>sales_lag_16 / 21 / 28</strong> : ventes passées (effet mémoire)<br>
+            • <strong>sales_roll_mean_7 / 28</strong> : tendance récente<br>
+            • <strong>sales_roll_std_7</strong> : volatilité des ventes
+        </p>
+    </div>
+
+    <!-- TARGET ENCODING -->
+    <div class="model-box">
+        <h4>🏷️ Encodage des Variables Catégorielles (Target Encoding)</h4>
+        <p>
+            Les variables catégorielles sont remplacées par leur
+            <strong>niveau moyen historique de ventes</strong>,
+            permettant une représentation numérique compacte et informative.
+        </p>
+
+        <p>
+            • <strong>store_nbr_target_enc</strong><br>
+            • <strong>item_nbr_target_enc</strong><br>
+            • <strong>family_target_enc</strong><br>
+            • <strong>city_target_enc / cluster_target_enc / type_target_enc</strong>
+        </p>
+    </div>
+
+    <!-- PRODUCT INFO -->
+    <div class="model-box">
+        <h4>🏪 Informations Produits & Magasins</h4>
+        <p>
+            • <strong>onpromotion</strong> : indicateur de promotion<br>
+            • <strong>perishable</strong> : produit périssable (pondération plus forte)<br>
+            • <strong>class</strong> : classe numérique du produit
+        </p>
+    </div>
+
+    <div class="key-point">
+        <h4>Résultat Final</h4>
+        <p>
+            La base finale combine <strong>signaux temporels, économiques et comportementaux</strong>,
+            offrant un compromis optimal entre richesse informationnelle,
+            stabilité statistique et performance prédictive.
+        </p>
+    </div>
+</section>
+
+            <section id="modeles">
+                <h2>3. Modèles Testés</h2>
+                
+                <h3>3.1 Baseline : Moyenne Mobile</h3>
+                <div class="model-box">
+                    <h4>Principe théorique</h4>
+                    <p>La moyenne mobile à 7 jours calcule la prévision comme la moyenne arithmétique des ventes observées sur les 7 derniers jours. Pour un jour <em>t</em>, la prévision est donnée par :</p>
+                    
+                    <div class="formula">
+                        ŷ<sub>t</sub> = (1/7) × Σ<sub>i=1</sub><sup>7</sup> y<sub>t-i</sub>
+                    </div>
+                    
+                    <h4>Rôle fondamental du baseline</h4>
+                    <p>Le baseline n'est pas un simple point de départ : il constitue une référence critique qui permet de mesurer objectivement la valeur ajoutée des modèles de machine learning. Un modèle complexe qui ne surpasse pas significativement un baseline simple ne justifie pas son déploiement en production. Dans le contexte retail, la moyenne mobile capture naturellement la tendance récente et constitue une prévision raisonnable en l'absence d'événements exceptionnels.</p>
+                    
+                    <h4><span class="advantage">Avantages</span></h4>
+                    <p>• Simplicité d'implémentation et d'interprétation<br>
+                    • Aucun entraînement nécessaire<br>
+                    • Robustesse aux outliers temporaires<br>
+                    • Latence minimale en production</p>
+                    
+                    <h4><span class="limitation">Limites</span></h4>
+                    <p>• Incapacité à capturer les tendances de long terme<br>
+                    • Absence de prise en compte de la saisonnalité hebdomadaire ou mensuelle<br>
+                    • Pas d'intégration de features exogènes (promotions, jours fériés)<br>
+                    • Performance dégradée lors d'événements exceptionnels</p>
+                </div>
+                
+                <h3>3.2 Modèles Linéaires</h3>
+                <div class="model-box">
+                    <h4>Principe théorique général</h4>
+                    <p>Les modèles linéaires supposent une relation linéaire entre les features <strong>X</strong> et la variable cible <strong>y</strong>. Le modèle s'exprime sous la forme :</p>
+                    
+                    <div class="formula">
+                        ŷ = β<sub>0</sub> + β<sub>1</sub>x<sub>1</sub> + β<sub>2</sub>x<sub>2</sub> + ... + β<sub>p</sub>x<sub>p</sub> + ε
+                    </div>
+                    
+                    <p>où les coefficients β sont estimés en minimisant une fonction de perte, généralement l'erreur quadratique moyenne (MSE).</p>
+                    
+                    <h4>Régression Linéaire (Ordinary Least Squares)</h4>
+                    <p>La régression linéaire classique minimise directement la somme des carrés des résidus sans contrainte sur les coefficients. Elle fournit une solution analytique mais est sensible à la multicolinéarité et au sur-apprentissage lorsque le nombre de features est élevé.</p>
+                    
+                    <h4>Ridge Regression (Régularisation L2)</h4>
+                    <p>Ridge ajoute une pénalité L2 sur la norme des coefficients à la fonction de perte :</p>
+                    
+                    <div class="formula">
+                        Loss = MSE + λ × Σ β<sub>j</sub><sup>2</sup>
+                    </div>
+                    
+                    <p>Le paramètre λ contrôle l'intensité de la régularisation. Ridge réduit la variance du modèle en "rétrécissant" les coefficients vers zéro sans les annuler complètement, ce qui améliore la généralisation sur des données non vues.</p>
+                    
+                    <h4>Lasso Regression (Régularisation L1)</h4>
+                    <p>Lasso utilise une pénalité L1 :</p>
+                    
+                    <div class="formula">
+                        Loss = MSE + λ × Σ |β<sub>j</sub>|
+                    </div>
+                    
+                    <p>Contrairement à Ridge, Lasso peut annuler complètement certains coefficients, effectuant ainsi une sélection automatique de features. Cette propriété est particulièrement utile lorsque de nombreuses features sont faiblement corrélées à la cible.</p>
+                    
+                    <h4>ElasticNet</h4>
+                    <p>ElasticNet combine les pénalités L1 et L2 :</p>
+                    
+                    <div class="formula">
+                        Loss = MSE + λ<sub>1</sub> × Σ |β<sub>j</sub>| + λ<sub>2</sub> × Σ β<sub>j</sub><sup>2</sup>
+                    </div>
+                    
+                    <p>Cette combinaison permet de bénéficier à la fois de la sélection de features de Lasso et de la stabilité de Ridge, particulièrement efficace en présence de groupes de features corrélées.</p>
+                    
+                    <div class="key-point">
+                        <h4>Biais-Variance Tradeoff</h4>
+                        <p>La régularisation illustre le compromis fondamental entre biais et variance : en ajoutant du biais (via la contrainte sur les coefficients), on réduit la variance et donc le risque de sur-apprentissage. Le choix de λ détermine ce compromis et doit être optimisé par validation croisée.</p>
+                    </div>
+                    
+                    <h4><span class="advantage">Avantages pour le forecasting retail</span></h4>
+                    <p>• Interprétabilité élevée des coefficients<br>
+                    • Entraînement rapide même sur de grands datasets<br>
+                    • Robustesse avec régularisation appropriée<br>
+                    • Gestion efficace de la multicolinéarité</p>
+                    
+                    <h4><span class="limitation">Limites</span></h4>
+                    <p>• Hypothèse de linéarité souvent violée dans les données retail<br>
+                    • Incapacité à capturer les interactions complexes entre features<br>
+                    • Performance limitée face à des patterns non-linéaires (saisonnalité, promotions)<br>
+                    • Nécessite un feature engineering poussé pour compenser les limitations</p>
+                </div>
+                
+                <h3>3.3 Modèles Basés sur les Arbres</h3>
+                <div class="model-box">
+                    <h4>Decision Tree (Arbre de Décision)</h4>
+                    <p>Un arbre de décision partitionne récursivement l'espace des features en régions homogènes. À chaque nœud, l'algorithme sélectionne la feature et le seuil qui maximisent une mesure de pureté (réduction de variance pour la régression). La prévision pour une observation correspond à la moyenne des valeurs cibles dans la feuille terminale atteinte.</p>
+                    
+                    <p>Bien que les arbres individuels capturent naturellement les non-linéarités et les interactions, ils souffrent de forte variance : de petites variations dans les données d'entraînement peuvent produire des arbres très différents. Cette instabilité limite leur utilisation isolée en production.</p>
+                    
+                    <h4>Random Forest</h4>
+                    <p>Random Forest implémente le principe du <strong>bagging</strong> (Bootstrap Aggregating) appliqué aux arbres de décision. L'algorithme construit un ensemble de <em>B</em> arbres sur des échantillons bootstrap des données d'entraînement, en introduisant une randomisation supplémentaire lors du choix des features à chaque split.</p>
+                    
+                    <div class="formula">
+                        ŷ = (1/B) × Σ<sub>b=1</sub><sup>B</sup> T<sub>b</sub>(x)
+                    </div>
+                    
+                    <p>où T<sub>b</sub>(x) est la prévision du b-ième arbre.</p>
+                    
+                    <div class="key-point">
+                        <h4>Réduction de la variance par bagging</h4>
+                        <p>Le bagging réduit la variance sans augmenter le biais en moyennant les prévisions de multiples modèles faiblement corrélés. Mathématiquement, si chaque arbre a une variance σ² et que les arbres sont décorrélés, la variance de l'ensemble est σ²/B. En pratique, la corrélation résiduelle limite cette réduction, d'où l'importance de la randomisation des features.</p>
+                    </div>
+                    
+                    <h4>Gestion des non-linéarités</h4>
+                    <p>Les modèles à base d'arbres excellent dans la capture de relations non-linéaires complexes et d'interactions d'ordre élevé sans nécessiter de feature engineering explicite. Pour le retail, cela permet de modéliser naturellement des phénomènes tels que l'impact différencié des promotions selon le type de produit, le jour de la semaine ou la saison.</p>
+                    
+                    <h4><span class="advantage">Avantages</span></h4>
+                    <p>• Capture automatique des non-linéarités et interactions<br>
+                    • Robustesse aux outliers et aux features non normalisées<br>
+                    • Peu sensible aux transformations monotones des features<br>
+                    • Fourniture de mesures d'importance des features</p>
+                    
+                    <h4><span class="limitation">Limites</span></h4>
+                    <p>• Temps d'entraînement élevé pour de grands ensembles d'arbres<br>
+                    • Taille importante du modèle en mémoire<br>
+                    • Interprétabilité réduite comparée aux modèles linéaires<br>
+                    • Risque de sur-apprentissage si les arbres ne sont pas suffisamment régularisés</p>
+                </div>
+                
+                <h3>3.4 Gradient Boosting : LightGBM</h3>
+                <div class="model-box">
+                    <h4>Principe du Gradient Boosting</h4>
+                    <p>Le Gradient Boosting construit séquentiellement un ensemble de modèles faibles (généralement des arbres peu profonds) où chaque nouveau modèle corrige les erreurs des modèles précédents. À l'itération <em>m</em>, le modèle ajusté est :</p>
+                    
+                    <div class="formula">
+                        F<sub>m</sub>(x) = F<sub>m-1</sub>(x) + ν × h<sub>m</sub>(x)
+                    </div>
+                    
+                    <p>où h<sub>m</sub> est un nouvel arbre entraîné sur le gradient négatif de la fonction de perte, et ν est le learning rate qui contrôle la contribution de chaque arbre.</p>
+                    
+                    <h4>Spécificités de LightGBM</h4>
+                    <p><strong>Histogram-based learning</strong> : LightGBM discrétise les features continues en histogrammes (bins), réduisant drastiquement la complexité de recherche des meilleurs splits. Cette approche accélère l'entraînement de plusieurs ordres de grandeur tout en préservant la qualité prédictive.</p>
+                    
+                    <p><strong>Leaf-wise growth</strong> : Contrairement aux approches level-wise (XGBoost), LightGBM croît les arbres en choisissant la feuille qui maximise la réduction de perte, indépendamment du niveau de profondeur. Cette stratégie permet d'obtenir des arbres plus asymétriques mais souvent plus précis avec moins de feuilles.</p>
+                    
+                    <p><strong>Gradient-based One-Side Sampling (GOSS)</strong> : LightGBM échantillonne de manière non uniforme les observations, en conservant toutes celles avec de grands gradients (erreurs importantes) et en sous-échantillonnant les autres. Cette technique maintient la qualité de l'information tout en réduisant le coût computationnel.</p>
+                    
+                    <p><strong>Exclusive Feature Bundling (EFB)</strong> : Les features mutuellement exclusives (qui ne prennent jamais de valeurs non-nulles simultanément) sont regroupées pour réduire la dimensionnalité effective, particulièrement efficace avec les encodages one-hot.</p>
+                    
+                    <div class="highlight">
+                        <h4>Pourquoi LightGBM pour le retail ?</h4>
+                        <p>Les datasets retail présentent typiquement des millions d'observations (transactions journalières sur de multiples produits et magasins) et des centaines de features (caractéristiques produits, magasins, calendrier, lags, statistiques roulantes). LightGBM est spécifiquement conçu pour ces situations de haute dimensionnalité :</p>
+                        <p>• <strong>Scalabilité</strong> : Temps d'entraînement linéaire ou sub-linéaire par rapport au nombre d'observations<br>
+                        • <strong>Efficacité mémoire</strong> : Consommation RAM réduite grâce aux histogrammes<br>
+                        • <strong>Performance</strong> : Obtient régulièrement les meilleurs scores sur les compétitions Kaggle retail<br>
+                        • <strong>Flexibilité</strong> : Support natif de fonctions de perte personnalisées et de features catégorielles</p>
+                    </div>
+                    
+                    <h4>Comparaison avec XGBoost et CatBoost</h4>
+                    <p><strong>XGBoost</strong> utilise une stratégie level-wise et une recherche exacte ou approximative des splits. Bien qu'historiquement le standard du gradient boosting, il est généralement plus lent que LightGBM sur de grands datasets, bien que parfois légèrement plus précis sur de petits datasets structurés.</p>
+                    
+                    <p><strong>CatBoost</strong> excelle dans le traitement des features catégorielles via un encodage sophistiqué (ordered target statistics). Il offre également une bonne robustesse aux hyperparamètres par défaut. Cependant, son temps d'entraînement est souvent supérieur à LightGBM, et ses performances prédictives sont comparables dans la plupart des cas.</p>
+                    
+                    <p>Pour le forecasting retail à grande échelle, LightGBM représente généralement le meilleur compromis performance/vitesse, expliquant sa popularité dans l'industrie et les compétitions.</p>
+                    
+                    <h4><span class="advantage">Avantages</span></h4>
+                    <p>• Performances prédictives state-of-the-art sur données tabulaires<br>
+                    • Temps d'entraînement et d'inférence très compétitifs<br>
+                    • Gestion native des valeurs manquantes<br>
+                    • Régularisation efficace contre le sur-apprentissage<br>
+                    • Parallélisation optimisée (CPU et GPU)</p>
+                    
+                    <h4><span class="limitation">Limites</span></h4>
+                    <p>• Sensibilité aux hyperparamètres (nécessite tuning soigneux)<br>
+                    • Risque de sur-apprentissage si mal configuré<br>
+                    • Interprétabilité globale limitée (modèles ensemblistes complexes)<br>
+                    • Peut sous-performer sur de très petits datasets</p>
+                </div>
+            </section>
+            
+            <section id="metriques">
+                <h2>4. Métriques d'Évaluation</h2>
+                
+                <h3>4.1 NWRMSLE (Normalized Weighted Root Mean Squared Logarithmic Error)</h3>
+                <div class="model-box">
+                    <h4>Formule mathématique</h4>
+                    <div class="formula">
+                        NWRMSLE = √[ (Σ w<sub>i</sub> × (log(ŷ<sub>i</sub> + 1) - log(y<sub>i</sub> + 1))²) / (Σ w<sub>i</sub>) ]
+                    </div>
+                    
+                    <p>où :<br>
+                    • y<sub>i</sub> représente les ventes réelles<br>
+                    • ŷ<sub>i</sub> représente les prévisions<br>
+                    • w<sub>i</sub> sont les poids associés à chaque observation<br>
+                    • log désigne le logarithme naturel</p>
+                    
+                    <h4>Interprétation économique</h4>
+                    <p>La transformation logarithmique rend la métrique sensible aux <strong>erreurs relatives</strong> plutôt qu'absolues. Une erreur de 10 unités sur une prévision de 20 unités est pénalisée plus sévèrement qu'une erreur de 10 unités sur une prévision de 1000 unités. Cette propriété est cruciale en retail où :</p>
+                    
+                    <p>• Les produits à faible volume méritent une attention proportionnelle (rupture coûteuse même pour peu d'unités)<br>
+                    • La comparaison entre produits de volumes très différents devient équitable<br>
+                    • Les performances sur l'ensemble du catalogue sont mieux évaluées</p>
+                    
+                    <p>L'ajout de +1 avant le logarithme évite les problèmes mathématiques avec les ventes nulles (log(0) non défini) et atténue l'impact disproportionné des très petites valeurs.</p>
+                    
+                    <h4>Usage dans Kaggle Favorita</h4>
+                    <p>La compétition Favorita utilisait le NWRMSLE avec des poids w<sub>i</sub> reflétant l'importance stratégique de certains produits ou magasins. Cette métrique encourage les modèles à bien performer sur l'ensemble du portefeuille produits plutôt que de se spécialiser sur les best-sellers, alignant ainsi les objectifs de modélisation avec les impératifs business.</p>
+                    
+                    <h4>Sensibilité aux faibles volumes</h4>
+                    <p>Pour les produits à très faible rotation (ventes proches de zéro), le NWRMSLE peut devenir instable. Des stratégies de traitement spécifiques (seuils minimaux, agrégation temporelle) sont souvent nécessaires pour équilibrer précision et stabilité.</p>
+                </div>
+                
+                <h3>4.2 MAE (Mean Absolute Error)</h3>
+                <div class="model-box">
+                    <h4>Formule</h4>
+                    <div class="formula">
+                        MAE = (1/n) × Σ |y<sub>i</sub> - ŷ<sub>i</sub>|
+                    </div>
+                    
+                    <h4>Avantages en termes d'interprétation métier</h4>
+                    <p>Le MAE est directement interprétable dans l'unité de mesure originale (unités vendues). Une MAE de 15 signifie qu'en moyenne, les prévisions s'écartent de 15 unités des ventes réelles. Cette transparence facilite la communication avec les équipes opérationnelles non techniques.</p>
+                    
+                    <p>Contrairement au RMSE (Root Mean Squared Error), le MAE est moins sensible aux outliers car il ne quadratique pas les erreurs. Dans le retail où des pics de demande sporadiques sont fréquents (promotions exceptionnelles, événements locaux), cette robustesse est appréciable.</p>
+                    
+                    <h4><span class="limitation">Limites dans le cas de séries hétérogènes</span></h4>
+                    <p>Le MAE traite toutes les erreurs de manière égale, indépendamment du volume de ventes. Une erreur de 50 unités impacte identiquement le MAE qu'elle concerne un produit vendant 100 unités/jour ou 10 000 unités/jour. Cette indifférence à l'échelle rend le MAE peu adapté à l'évaluation globale sur un catalogue hétérogène.</p>
+                    
+                    <p>Pour pallier cette limitation, on peut calculer des MAE par segments (catégories produits, magasins) ou utiliser le MAPE (Mean Absolute Percentage Error), bien que ce dernier souffre de problèmes de division par zéro pour les faibles volumes.</p>
+                </div>
+                
+                <h3>4.3 Temps de Calcul</h3>
+                <div class="model-box">
+                    <h4>Importance en production</h4>
+                    <p>Le temps de calcul ne se limite pas à l'entraînement : il englobe également l'inférence (génération de prévisions), le feature engineering, et les opérations de maintenance du modèle. En production retail, les prévisions doivent souvent être actualisées quotidiennement pour des milliers de combinaisons produit-magasin.</p>
+                    
+                    <p>Un modèle nécessitant 10 heures d'entraînement quotidien peut bloquer les fenêtres de maintenance et retarder la mise à disposition des prévisions aux équipes opérationnelles. L'infrastructure technique (serveurs, coûts cloud) et l'agilité business (capacité à réentraîner rapidement suite à un changement) dépendent directement de cette métrique.</p>
+                    
+                    <div class="key-point">
+                        <h4>Arbitrage performance prédictive vs coût computationnel</h4>
+                        <p>Un modèle complexe améliorant le NWRMSLE de 0.5% mais nécessitant 20 fois plus de temps de calcul n'est généralement pas justifié économiquement. L'analyse coût-bénéfice doit intégrer :</p>
+                        <p>• Le gain business marginal d'une meilleure prévision<br>
+                        • Les coûts d'infrastructure supplémentaires<br>
+                        • La complexité de maintenance et de debugging<br>
+                        • Les risques opérationnels (latence, défaillances)</p>
+                    </div>
+                    
+                    <p>La courbe de Pareto performance/temps guide typiquement vers des modèles offrant 80-90% de la performance maximale théorique avec une fraction du coût computationnel.</p>
+                </div>
+            </section>
+            
+            <section id="bonnes-pratiques">
+                <h2>5. Bonnes Pratiques Méthodologiques</h2>
+                
+                <h3>5.1 Importance du Baseline</h3>
+                <div class="model-box">
+                    <p>Débuter systématiquement par un baseline simple est une discipline fondamentale en data science. Le baseline remplit trois fonctions critiques :</p>
+                    
+                    <p><strong>Ancrage de référence</strong> : Il quantifie la difficulté intrinsèque du problème et le niveau de performance "gratuit" accessible sans modélisation complexe.</p>
+                    
+                    <p><strong>Validation de la valeur ajoutée</strong> : Si un modèle sophistiqué ne surpasse pas significativement le baseline, cela indique soit un problème de modélisation, soit l'absence de signal exploitable dans les données.</p>
+                    
+                    <p><strong>Solution de secours</strong> : En cas de défaillance du système ML en production, le baseline peut servir de fallback garantissant une continuité de service minimale.</p>
+                </div>
+                
+                <h3>5.2 Validation Temporelle</h3>
+                <div class="model-box">
+                    <p>Les séries temporelles violent l'hypothèse i.i.d. (indépendante et identiquement distribuée) sous-jacente à la validation croisée classique. Une approche time-series split doit être adoptée :</p>
+                    
+                    <div class="formula">
+                        Train: [t₁, t₂, ..., tₙ] → Validation: [tₙ₊₁, ..., tₙ₊ₖ] → Test: [tₙ₊ₖ₊₁, ..., tₙ₊ₖ₊ₘ]
+                    </div>
+                    
+                    <p>Cette séparation strictement temporelle simule la réalité opérationnelle : le modèle est entraîné sur le passé et doit prédire le futur. Elle prévient le data leakage temporel et fournit une estimation réaliste de la performance en production.</p>
+                    
+                    <p>Pour augmenter la robustesse de l'évaluation, une validation croisée temporelle avec fenêtres glissantes (rolling origin) peut être implémentée, testant le modèle sur plusieurs périodes futures successives.</p>
+                </div>
+                
+                <h3>5.3 Risques de Data Leakage</h3>
+                <div class="model-box">
+                    <p>Le data leakage, particulièrement insidieux dans les séries temporelles, peut créer une illusion de performance élevée qui s'effondre en production. Les sources principales sont :</p>
+                    
+                    <p><strong>Leakage temporel</strong> : Utilisation d'informations futures dans les features (ex : statistiques calculées sur l'ensemble du dataset incluant les périodes de test).</p>
+                    
+                    <p><strong>Leakage via la target</strong> : Features directement dérivées de la variable cible (ex : ratio calculé avec les ventes du jour à prédire).</p>
+                    
+                    <p><strong>Leakage via normalisation globale</strong> : Standardisation calculée sur train+test puis appliquée, incorporant des statistiques futures.</p>
+                    
+                    <p><strong>Prévention</strong> : Toute transformation (imputation, normalisation, feature engineering) doit être ajustée uniquement sur le set d'entraînement puis appliquée aux autres sets. Les pipelines scikit-learn garantissent cette discipline si correctement utilisés.</p>
+                </div>
+                
+                <h3>5.4 Séparation Entraînement / Validation / Test</h3>
+                <div class="model-box">
+                    <p>La séparation tripartite des données est une protection fondamentale contre le sur-apprentissage et la sélection biaisée de modèles :</p>
+                    
+                    <p><strong>Set d'entraînement (60-70%)</strong> : Utilisé pour l'ajustement des paramètres du modèle (poids, coefficients).</p>
+                    
+                    <p><strong>Set de validation (15-20%)</strong> : Utilisé pour le tuning des hyperparamètres et la sélection entre modèles concurrents. Ce set guide les décisions méthodologiques.</p>
+                    
+                    <p><strong>Set de test (15-20%)</strong> : Utilisé une seule fois, après finalisation complète du modèle, pour estimer la performance réelle en conditions opérationnelles. Ce set ne doit JAMAIS influencer les choix de modélisation.</p>
+                    
+                    <p>La contamination du test (utilisation répétée pour comparer des variantes) transforme de facto ce set en validation supplémentaire, biaisant à la hausse l'estimation de performance. La discipline de n'évaluer sur le test qu'une fois le modèle totalement figé est absolument critique pour la crédibilité scientifique du projet.</p>
+                </div>
+            </section>
+            
+            <section id="conclusion">
+                <h2>Conclusion</h2>
+                
+                <p>Ce projet de prévision des ventes retail, inspiré de la compétition Kaggle Favorita, illustre une démarche méthodologique rigoureuse de sélection et d'évaluation de modèles de machine learning. La comparaison systématique de multiples approches, du baseline simple (moyenne mobile) aux techniques de gradient boosting avancées (LightGBM), a permis d'identifier le modèle optimal selon un ensemble de critères techniques et business.</p>
+                
+                <div class="highlight">
+                    <h3>Enseignements Clés</h3>
+                    
+                    <p><strong>1. La supériorité du gradient boosting</strong> sur les données tabulaires retail est confirmée, avec LightGBM obtenant les meilleures performances (NWRMSLE: 0.398, MAE: 7.82) tout en restant computationnellement efficient (156s d'entraînement).</p>
+                    
+                    <p><strong>2. L'importance du compromis performance-complexité</strong> : Un modèle n'est pertinent pour la production que s'il offre un gain prédictif significatif justifiant son coût additionnel en ressources et en maintenance.</p>
+                    
+                    <p><strong>3. La nécessité d'une évaluation multicritère</strong> : La décision ne peut reposer uniquement sur une métrique prédictive mais doit intégrer temps de calcul, interprétabilité, robustesse, et alignement avec les contraintes opérationnelles.</p>
+                    
+                    <p><strong>4. L'indispensabilité des bonnes pratiques</strong> : Baseline rigoureux, validation temporelle stricte, prévention du leakage, et séparation train/validation/test constituent les fondations d'un projet ML crédible et reproductible.</p>
+                </div>
+                
+                <h3>Ouvertures et Perspectives</h3>
+                
+                <p><strong>Feature Engineering Avancé</strong> : L'amélioration des performances passe souvent davantage par l'ingénierie de features que par le changement de modèle. Des pistes incluent : agrégations temporelles multi-échelles, encodages de cyclicité (Fourier features), interactions explicites entre catégories, embedding de produits similaires, et incorporation de données externes (météo, événements locaux, concurrence).</p>
+                
+                <p><strong>Modèles Hybrides</strong> : L'approche ensembliste combinant les prédictions de plusieurs modèles complémentaires (stacking, blending) peut exploiter les forces respectives des différentes familles. Par exemple, un ensemble LightGBM + CatBoost + Neural Network peut capturer des patterns que chaque modèle individuellement manquerait.</p>
+                
+                <p><strong>Deep Learning pour le Forecasting</strong> : Les architectures récentes (Transformers temporels, N-BEATS, DeepAR) montrent des résultats prometteurs sur certains problèmes de séries temporelles complexes. Bien que gourmandes en données et en calcul, elles méritent exploration pour des datasets de très grande échelle ou lorsque des patterns complexes de long terme sont suspectés.</p>
+                
+                <p><strong>Prévision Probabiliste</strong> : Au-delà des prévisions ponctuelles, les modèles fournissant des intervalles de confiance ou des distributions complètes (quantile regression, modèles bayésiens) apportent une information précieuse pour la gestion du risque et l'optimisation sous incertitude.</p>
+                
+                <p><strong>AutoML et Optimisation d'Hyperparamètres</strong> : Les frameworks d'AutoML (Optuna, Ray Tune, AutoGluon) peuvent automatiser et améliorer le tuning des hyperparamètres, libérant du temps data scientist pour des tâches à plus forte valeur ajoutée.</p>
+                
+                <p>La prévision des ventes demeure un domaine de recherche et d'innovation actif, où les avancées méthodologiques se traduisent directement en impact business mesurable. L'adoption de LightGBM comme standard industriel reflète l'état de l'art actuel, mais l'évolution continue des techniques et des outils promet des améliorations futures substantielles.</p>
+            </section>
+            
+            <section id="references" class="references">
+                <h2>Références</h2>
+                
+                <ol>
+                    <li><strong>LightGBM Documentation Officielle</strong><br>
+                    Microsoft Research. "LightGBM: A Highly Efficient Gradient Boosting Decision Tree."<br>
+                    <em>https://lightgbm.readthedocs.io/</em></li>
+                    
+                    <li><strong>Ke, G., Meng, Q., Finley, T., et al. (2017)</strong><br>
+                    "LightGBM: A Highly Efficient Gradient Boosting Decision Tree."<br>
+                    <em>Advances in Neural Information Processing Systems 30 (NIPS 2017)</em></li>
+                    
+                    <li><strong>Kaggle Competition: Corporación Favorita Grocery Sales Forecasting</strong><br>
+                    "Can you accurately predict sales for a large grocery chain?"<br>
+                    <em>https://www.kaggle.com/c/favorita-grocery-sales-forecasting</em></li>
+                    
+                    <li><strong>Chen, T., & Guestrin, C. (2016)</strong><br>
+                    "XGBoost: A Scalable Tree Boosting System."<br>
+                    <em>Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining</em></li>
+                    
+                    <li><strong>Prokhorenkova, L., Gusev, G., Vorobev, A., et al. (2018)</strong><br>
+                    "CatBoost: unbiased boosting with categorical features."<br>
+                    <em>Advances in Neural Information Processing Systems 31 (NeurIPS 2018)</em></li>
+                    
+                    <li><strong>Hastie, T., Tibshirani, R., & Friedman, J. (2009)</strong><br>
+                    "The Elements of Statistical Learning: Data Mining, Inference, and Prediction."<br>
+                    <em>Springer Series in Statistics, 2nd Edition</em></li>
+                    
+                    <li><strong>Hyndman, R.J., & Athanasopoulos, G. (2021)</strong><br>
+                    "Forecasting: Principles and Practice."<br>
+                    <em>OTexts: Melbourne, Australia. 3rd Edition. https://otexts.com/fpp3/</em></li>
+                    
+                    <li><strong>Brownlee, J. (2020)</strong><br>
+                    "How to Develop a Light Gradient Boosting Machine for Time Series Forecasting."<br>
+                    <em>Machine Learning Mastery. https://machinelearningmastery.com/</em></li>
+                    
+                    <li><strong>Kaggle Winning Solutions</strong><br>
+                    "1st Place Solution - Corporación Favorita Grocery Sales Forecasting."<br>
+                    <em>Kaggle Discussion Forums</em></li>
+                    
+                    <li><strong>Tofallis, C. (2015)</strong><br>
+                    "A better measure of relative prediction accuracy for model selection and model estimation."<br>
+                    <em>Journal of the Operational Research Society, 66(8), 1352-1362</em></li>
+                    
+                    <li><strong>Breiman, L. (2001)</strong><br>
+                    "Random Forests."<br>
+                    <em>Machine Learning, 45(1), 5-32</em></li>
+                    
+                    <li><strong>Tibshirani, R. (1996)</strong><br>
+                    "Regression Shrinkage and Selection via the Lasso."<br>
+                    <em>Journal of the Royal Statistical Society Series B, 58(1), 267-288</em></li>
+                    
+                    <li><strong>Lundberg, S.M., & Lee, S.I. (2017)</strong><br>
+                    "A Unified Approach to Interpreting Model Predictions."<br>
+                    <em>Advances in Neural Information Processing Systems 30 (NIPS 2017)</em></li>
+                    
+                    <li><strong>Makridakis, S., Spiliotis, E., & Assimakopoulos, V. (2020)</strong><br>
+                    "The M4 Competition: 100,000 time series and 61 forecasting methods."<br>
+                    <em>International Journal of Forecasting, 36(1), 54-74</em></li>
+                </ol>
+            </section>
+        </div>
+        
+        <footer>
+            <p><strong>Note Technique – Sales Forecasting</strong></p>
+            <p>Document académique et professionnel • Corporación Favorita Kaggle Competition</p>
+            <p>© 2024 - Tous droits réservés</p>
+        </footer>
+    </div>
+</body>
+</html>
